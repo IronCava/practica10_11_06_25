@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Iniciar sesión</title>
+  <link rel="stylesheet" href="/resources/css/style.css">
+</head>
+<body>
+  <h1>Iniciar sesión</h1>
+  
+  <% if (message) { %>
+    <p style="color: red;"><%= message %></p>
+  <% } %>
+
+  <form action="/auth" method="POST">
+  <label for="email">Usuario:</label>
+  <input type="email" name="email" required />
+
+  <label for="pass">Contraseña:</label>
+  <input type="password" name="pass" required />
+
+  <input type="submit" value="Iniciar sesión" />
+</form>
+
+  <p>¿No tienes cuenta? <a href="/registro">Regístrate aquí</a></p>
+</body>
+</html>
