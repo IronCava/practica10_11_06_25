@@ -1,47 +1,62 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro</title>
-  <link rel="stylesheet" href="/resources/css/style.css" />
-  <!-- Incluyo SweetAlert2 para mostrar alertas bonitas -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-</head>
 
-<body>
-  <div class="register-form">
-    <h1>Formulario de registro</h1>
+<%- include('partials/_head') %>
+<h2>Formulario de registro</h2>
 
-    <!-- Este formulario envía los datos a la ruta /register por POST -->
-    <form action="/register" method="POST">
-      <label for="user">Usuario</label>
-      <input type="text" name="user" required autofocus />
+<% 
+  const _errors = (typeof errors !== 'undefined' && errors) ? errors : null;
+  const _old    = (typeof old    !== 'undefined' && old)    ? old    : {};
+%>
 
-      <label for="name">Nombre completo</label>
-      <input type="text" name="name" required />
+<% if (_errors) { %>
+  <ul class="form-errors" style="color:red; font-weight:bold; margin-bottom:10px;">
+    <% Object.values(_errors).forEach(e => { %>
+      <li><%= e.msg %></li>
+    <% }) %>
+  </ul>
+<% } %>
 
-      <label for="apellidos">Apellidos</label>
-      <input type="text" name="apellidos" required />
+<form action="/register" method="POST">
+  <label for="user">Usuario (email)</label>
+<input type="email" name="user" value="<%= _old.user || '' %>" required autofocus />
+  <% if (_errors && _errors.user) { %>
+    <small style="color:red;"><%= _errors.user.msg %></small>
+  <% } %>
 
-      <label for="rol">Rol</label>
-      <select name="rol" class="select-css" required>
-        <option value="admin">Admin</option>
-        <option value="editor" selected>Editor</option>
-      </select>
+  <label for="name">Nombre</label>
+  <input type="text" name="name" value="<%= _old.name || '' %>" required />
+  <% if (_errors && _errors.name) { %>
+    <small style="color:red;"><%= _errors.name.msg %></small>
+  <% } %>
 
-      <label for="pass">Contraseña</label>
-      <input type="password" name="pass" required />
+  <label for="apellidos">Apellidos</label>
+  <input type="text" name="apellidos" value="<%= _old.apellidos || '' %>" required />
+  <% if (_errors && _errors.apellidos) { %>
+    <small style="color:red;"><%= _errors.apellidos.msg %></small>
+  <% } %>
 
-      <div class="inline">
-        <a href="/" class="btn-cancel">Cancelar</a>
-        <input type="submit" value="Guardar" class="btn-save" />
-      </div>
-    </form>
+  <label for="rol">Rol</label>
+  <select name="rol" class="select-css" required>
+    <option value="admin"  <%= _old.rol === 'admin'  ? 'selected' : '' %>>Admin</option>
+    <option value="editor" <%= _old.rol === 'editor' ? 'selected' : '' %>>Editor</option>
+  </select>
+  <% if (_errors && _errors.rol) { %>
+    <small style="color:red;"><%= _errors.rol.msg %></small>
+  <% } %>
+
+  <label for="pass">Contraseña</label>
+  <input type="password" name="pass" required />
+  <% if (_errors && _errors.pass) { %>
+    <small style="color:red;"><%= _errors.pass.msg %></small>
+  <% } %>
+
+  <div class="inline">
+    <a href="/" class="btn-cancel">Cancelar</a>
+    <input type="submit" value="Guardar" class="btn-save" />
   </div>
+</form>
 
-  <!-- Si recibo una variable alert desde Node, muestro SweetAlert -->
- <% if (typeof alert !== "undefined") { %>
+<% /* SweetAlert de éxito (solo si alert está definido) */ %>
+<% if (typeof alert !== "undefined") { %>
   <script>
     Swal.fire({
       title: '<%= alertTitle %>',
@@ -54,5 +69,4 @@
     });
   </script>
 <% } %>
-</body>
-</html>
+<%- include('partials/_foot') %>

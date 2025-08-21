@@ -1,0 +1,45 @@
+<%- include('partials/_head') %>
+
+<div class="panel">
+  <h2><%= title %></h2>
+
+  <%
+    const _errors = (typeof errors !== 'undefined' && errors) ? errors : null;
+    const _old    = (typeof old    !== 'undefined' && old)    ? old    : {};
+  %>
+
+  <% if (_errors) { %>
+    <ul class="alert" style="list-style: square; padding-left: 20px;">
+      <% Object.values(_errors).forEach(e => { %><li><%= e.msg %></li><% }) %>
+    </ul>
+  <% } %>
+
+  <form action="<%= _old.id ? '/productos/' + _old.id + '/editar' : '/productos' %>" method="POST">
+    <% if (_old.id) { %>
+      <input type="hidden" name="id" value="<%= _old.id %>" />
+    <% } %>
+
+    <label>Nombre</label>
+    <input type="text" name="nombre" value="<%= _old.nombre || '' %>" required />
+    <% if (_errors && _errors.nombre) { %><small style="color:red;"><%= _errors.nombre.msg %></small><% } %>
+
+    <label>Descripción</label>
+    <textarea name="descripcion" style="width:100%; min-height:120px; border:3px solid #000;"><%= _old.descripcion || '' %></textarea>
+    <% if (_errors && _errors.descripcion) { %><small style="color:red;"><%= _errors.descripcion.msg %></small><% } %>
+
+    <label>Precio (€)</label>
+    <input type="number" step="0.01" name="precio" value="<%= _old.precio || '' %>" required />
+    <% if (_errors && _errors.precio) { %><small style="color:red;"><%= _errors.precio.msg %></small><% } %>
+
+    <label>Stock</label>
+    <input type="number" name="stock" value="<%= _old.stock || '' %>" required />
+    <% if (_errors && _errors.stock) { %><small style="color:red;"><%= _errors.stock.msg %></small><% } %>
+
+    <div class="inline">
+      <a class="btn btn-secondary" href="/productos">Cancelar</a>
+      <button class="btn btn-save" type="submit"><%= _old.id ? 'Guardar cambios' : 'Crear' %></button>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/_foot') %>

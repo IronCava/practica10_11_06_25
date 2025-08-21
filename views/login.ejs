@@ -1,27 +1,48 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Iniciar sesión</title>
-  <link rel="stylesheet" href="/resources/css/style.css">
-</head>
-<body>
-  <h1>Iniciar sesión</h1>
-  
-  <% if (message) { %>
-    <p style="color: red;"><%= message %></p>
+
+
+<%- include('partials/_head') %>
+
+<h2>Iniciar sesión</h2>
+
+<% 
+  // Variables seguras (si no vienen definidas, prevenimos "is not defined")
+  const _errors = (typeof errors !== 'undefined' && errors) ? errors : null;
+  const _old    = (typeof old    !== 'undefined' && old)    ? old    : {};
+  const _msg    = (typeof message !== 'undefined' && message) ? message : null;
+%>
+
+<% /* Mensaje de credenciales incorrectas (desde routes/auth.js) */ %>
+<% if (_msg) { %>
+  <div class="alert error" style="color:red; font-weight:bold; margin-bottom:10px;">
+    <%= _msg %>
+  </div>
+<% } %>
+
+<% /* Lista de errores de validación (from express-validator) */ %>
+<% if (_errors) { %>
+  <ul class="form-errors" style="color:red; font-weight:bold; margin-bottom:10px;">
+    <% Object.values(_errors).forEach(e => { %>
+      <li><%= e.msg %></li>
+    <% }) %>
+  </ul>
+<% } %>
+
+<form action="/auth" method="POST">
+  <label for="email">Usuario (email)</label>
+  <input type="email" name="email" value="<%= _old.email || '' %>" required />
+  <% if (_errors && _errors.email) { %>
+    <small class="error" style="color:red;"><%= _errors.email.msg %></small>
   <% } %>
 
-  <form action="/auth" method="POST">
-  <label for="email">Usuario:</label>
-  <input type="email" name="email" required />
-
-  <label for="pass">Contraseña:</label>
+  <label for="pass">Contraseña</label>
   <input type="password" name="pass" required />
+  <% if (_errors && _errors.pass) { %>
+    <small class="error" style="color:red;"><%= _errors.pass.msg %></small>
+  <% } %>
 
-  <input type="submit" value="Iniciar sesión" />
+<button type="submit" class="btn">Iniciar sesión</button>
 </form>
 
-  <p>¿No tienes cuenta? <a href="/registro">Regístrate aquí</a></p>
-</body>
-</html>
+<p>¿No tienes cuenta? <a href="/registro">Regístrate aquí</a></p>
+
+<%- include('partials/_foot') %>

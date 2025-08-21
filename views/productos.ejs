@@ -1,0 +1,49 @@
+<%- include('partials/_head') %>
+
+<div class="panel"><!-- envoltorio brutalista -->
+  <h2>Listado de productos</h2>
+
+  <% /* Solo admin: botón de crear */ %>
+  <% if (rol === 'admin') { %>
+    <p><a class="btn" href="/productos/nuevo">➕ Nuevo producto</a></p>
+  <% } %>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Precio (€)</th>
+        <th>Stock</th>
+        <% if (rol === 'admin') { %><th>Acciones</th><% } %>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (productos && productos.length) { %>
+        <% productos.forEach(p => { %>
+          <tr>
+            <td><%= p.id %></td>
+            <td><%= p.nombre %></td>
+            <td><%= p.descripcion || '' %></td>
+            <td><%= p.precio %></td>
+            <td><%= p.stock %></td>
+
+            <% if (rol === 'admin') { %>
+              <td>
+                <a class="btn btn-warning" href="/productos/<%= p.id %>/editar">✏️ Editar</a>
+                <form action="/productos/<%= p.id %>/borrar" method="POST" style="display:inline" onsubmit="return confirm('¿Eliminar este producto?')">
+                  <button class="btn btn-danger" type="submit">🗑️ Borrar</button>
+                </form>
+              </td>
+            <% } %>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr><td colspan="<%= rol === 'admin' ? 6 : 5 %>">No hay productos</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/_foot') %>

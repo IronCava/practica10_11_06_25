@@ -1,21 +1,12 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Página Principal</title>
-  <link rel="stylesheet" href="/resources/css/style.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Bienvenido a la plataforma</h1>
 
-    <% if (login) { %>
-      <p>Sesión iniciada como: <strong><%= name %></strong></p>
-      <a href="/logout" class="btn">Cerrar sesión</a>
-    <% } else { %>
-      <p>No has iniciado sesión.</p>
-      <a href="/login" class="btn">Iniciar sesión</a>
-    <% } %>
-  </div>
-</body>
-</html>
+<%- include('partials/_head') %>
+<h1>Bienvenido a la plataforma</h1>
+
+<% if (login) { %>
+  <p>Sesión iniciada como: <strong><%= name %></strong></p>
+  <a href="/logout" class="btn">Cerrar sesión</a>
+<% } else { %>
+  <p>No has iniciado sesión.</p>
+  <a href="/login" class="btn">Iniciar sesión</a>
+<% } %>
+<%- include('partials/_foot') %>

@@ -1,115 +1,176 @@
 /*
 Creo el servidor con Express.
-
 Configuro las sesiones.
-
 Defino el motor de plantillas (EJS).
-
 Preparo los middlewares.
-
 Creo las rutas básicas de inicio.
 */
 
-// Importo las librerías necesarias
-const express = require("express");
-const session = require("express-session");
-const path = require("path");
-const bcrypt = require("bcryptjs");
-const db = require("./database/db");
+// ─────────────────────────────────────────────
+// 1) IMPORTS
+// ─────────────────────────────────────────────
+const express = require("express");                  // Framework web
+const session = require("express-session");          // Sesiones
+const path = require("path");                        // Utilidades de rutas
+const bcrypt = require("bcryptjs");                  // Hash de contraseñas
+const db = require("./database/db");                 // Conexión MySQL
+const { validateRegister } = require("./middlewares/validators"); // Validaciones de registro
 
-// ✅ Cargo las variables de entorno desde /env/.env como en el proyecto del profesor
-const dotenv = require("dotenv");
-require("dotenv").config(); // busca directamente el archivo en la raíz
+// Variables de entorno (.env)
+require("dotenv").config();
 console.log("🎯 Verificación .env → DB_USER:", process.env.DB_USER);
 
-// Inicializo la aplicación
+// ─────────────────────────────────────────────
+// 2) APP Y PUERTO
+// ─────────────────────────────────────────────
 const app = express();
-
-// Configuro el puerto (desde .env o 4000 por defecto)
 const PORT = process.env.PORT || 4000;
 
-// Middlewares para procesar formularios y JSON
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+// ─────────────────────────────────────────────
+// 3) MIDDLEWARES BÁSICOS
+// ─────────────────────────────────────────────
+app.use(express.urlencoded({ extended: false }));    // Parseo de formularios
+app.use(express.json());                             // Parseo JSON
 
-// Configuración de sesiones
+// Defaults para vistas (evita ReferenceError en EJS)
+app.use((req, res, next) => {
+  res.locals.errors = null;                          
+  res.locals.old = null;                             
+  res.locals.message = null;                         
+  next();
+});
+
+// Archivos estáticos (CSS, imágenes, JS del front)
+app.use("/resources", express.static(path.join(__dirname, "public")));
+
+// ─────────────────────────────────────────────
+// 4) SESIONES
+// ─────────────────────────────────────────────
 app.use(
   session({
-    secret: "miclavesupersecreta", // Puedes mejorar esto en producción
+    secret: "miclavesupersecreta",   // ⚠️ Cambiar en producción
     resave: false,
     saveUninitialized: false,
   })
 );
 
-// Importo las rutas de autenticación
-const authRoutes = require("./routes/auth");
-// Uso las rutas de autenticación
-app.use("/", authRoutes);
+// Middleware global para exponer sesión en TODAS las vistas
+app.use((req, res, next) => {
+  res.locals.login = !!req.session.loggedin;
+  res.locals.name  = req.session.name || "Invitado";
+  res.locals.rol   = req.session.rol || null;
+  next();
+});
 
-// Carpeta de archivos estáticos (CSS, imágenes, etc.)
-app.use("/resources", express.static(path.join(__dirname, "public")));
+// Middleware para proteger rutas
+const requireLogin = (req, res, next) => {
+  if (!req.session.loggedin) return res.redirect("/login");
+  next();
+};
 
-// Motor de plantillas
+// Solo Admin
+const requireAdmin = (req, res, next) => {
+  if (!req.session.loggedin) return res.redirect("/login");    // sin sesión → login
+  if (req.session.rol !== "admin") return res.status(403).send("Prohibido");
+  next();
+};
+
+// ─────────────────────────────────────────────
+// 5) MOTOR DE VISTAS
+// ─────────────────────────────────────────────
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+// ─────────────────────────────────────────────
+// 6) RUTAS EXTERNAS
+// ─────────────────────────────────────────────
+const authRoutes = require("./routes/auth");
+app.use("/", authRoutes);
 
-// Ruta principal
+const productosRoutes = require("./routes/productos");
+app.use("/productos", requireLogin, productosRoutes);
+console.log("🔧 Router /productos montado");
+
+// ─────────────────────────────────────────────
+// 7) RUTAS PROPIAS
+// ─────────────────────────────────────────────
+
+// Home
 app.get("/", (req, res) => {
   res.render("index", {
+    title: "Inicio",
     login: req.session.loggedin || false,
     name: req.session.name || "Invitado",
+    rol: req.session.rol || null,
   });
 });
 
-// Ruta para mostrar el formulario de registro
+// GET /registro
 app.get("/registro", (req, res) => {
-  res.render("register");
+  res.render("register", {
+    title: "Registro",
+    errors: null,
+    old: null,
+  });
 });
 
-// Ruta que procesa los datos del formulario de registro
-app.post("/register", async (req, res) => {
-  const user = req.body.user;
-  const name = req.body.name;
-  const rol = req.body.rol;
-  const pass = req.body.pass;
-  const apellidos = req.body.apellidos;
+// POST /register
+app.post("/register", validateRegister, async (req, res) => {
+  const { user, name, apellidos, rol, pass } = req.body;
+  try {
+    const passwordHash = await bcrypt.hash(pass, 8);
 
-  let passwordHash = await bcrypt.hash(pass, 8);
+    db.query(
+      "INSERT INTO usuarios SET ?",
+      { email: user, nombre: name, apellidos, rol, pass: passwordHash },
+      (error, results) => {
+        if (error) {
+          console.error("❌ Error al registrar usuario:", error);
+          return res.status(400).render("register", {
+            title: "Registro",
+            errors: { user: { msg: "No se pudo registrar. ¿Ese email ya existe?" } },
+            old: req.body,
+          });
+        }
 
-  db.query(
-    "INSERT INTO usuarios SET ?",
-    { email: user,
-    nombre: name,
-    apellidos: apellidos,
-    rol: rol,
-    pass: passwordHash },
-    (error, results) => {
-      if (error) {
-        console.log("❌ Error al registrar usuario:", error);
-        res.send("Hubo un error al registrar el usuario");
-      } else {
-        res.render("register", {
+        return res.render("register", {
+          title: "Registro",
           alert: true,
           alertTitle: "Registro exitoso",
           alertMessage: "¡El usuario ha sido registrado!",
           alertIcon: "success",
           showConfirmButton: false,
           timer: 2000,
-          ruta: ""
+          ruta: "",
+          errors: null,
+          old: null,
         });
       }
-    }
-  );
+    );
+  } catch (err) {
+    console.error("❌ Error en hash o proceso:", err);
+    return res.status(500).render("register", {
+      title: "Registro",
+      errors: { pass: { msg: "Error interno. Intenta de nuevo." } },
+      old: req.body,
+    });
+  }
 });
 
-// Ruta para mostrar el formulario de login
+// GET /login
 app.get("/login", (req, res) => {
-  res.render("login", { message: null }); // añadimos la variable "message"
+  res.render("login", {
+    title: "Login",
+    message: null,
+    errors: null,
+    old: null,
+    login: req.session.loggedin || false,
+    name: req.session.name || "Invitado",
+    rol: req.session.rol || null,
+  });
 });
 
-
-// Ruta para mostrar todos los usuarios (formato JSON)
+// GET /usuarios (JSON)
 app.get("/usuarios", (req, res) => {
   db.query("SELECT * FROM usuarios", (err, results) => {
     if (err) {
@@ -120,25 +181,36 @@ app.get("/usuarios", (req, res) => {
   });
 });
 
-// Ruta solo para administradores
+// Panel ADMIN
 app.get("/admin", (req, res) => {
   if (req.session.loggedin && req.session.rol === "admin") {
-    res.send(`<h1>Bienvenida, administradora ${req.session.name}</h1><a href="/logout">Cerrar sesión</a>`);
-  } else {
-    res.redirect("/login");
+    return res.render("admin", {
+      title: "Panel Admin",
+      login: true,
+      name: req.session.name,
+      rol: req.session.rol,
+    });
   }
+  return res.redirect("/login");
 });
 
-// Ruta solo para editores
+// Panel EDITOR
 app.get("/editor", (req, res) => {
   if (req.session.loggedin && req.session.rol === "editor") {
-    res.send(`<h1>Bienvenid@, editor@ ${req.session.name}</h1><a href="/logout">Cerrar sesión</a>`);
-  } else {
-    res.redirect("/login");
+    return res.render("editor", {
+      title: "Panel Editor",
+      login: true,
+      name: req.session.name,
+      rol: req.session.rol,
+    });
   }
+  return res.redirect("/login");
 });
 
-// Arranco el servidor
+// ─────────────────────────────────────────────
+// 8) ARRANQUE DEL SERVIDOR
+// ─────────────────────────────────────────────
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

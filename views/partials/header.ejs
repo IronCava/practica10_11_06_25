@@ -1,0 +1,27 @@
+<% /*
+Header común para todas las vistas
+- Muestra menú distinto según si hay sesión iniciada o no.
+- Usa las variables: login, name, rol (pasadas desde index.js).
+*/ %>
+
+<header class="site-header">
+  <h1 class="logo"><a href="/">Mi Plataforma</a></h1>
+
+  <nav>
+    <ul>
+      <% if (typeof login !== 'undefined' && login) { %>
+        <li>Hola, <strong><%= name %></strong> (<%= rol %>)</li>
+        <li><a href="/logout">Cerrar sesión</a></li>
+        <% if (rol === 'admin') { %>
+          <li><a href="/admin">Panel Admin</a></li>
+        <% } %>
+        <% if (rol === 'editor') { %>
+          <li><a href="/editor">Panel Editor</a></li>
+        <% } %>
+      <% } else { %>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/registro">Registro</a></li>
+      <% } %>
+    </ul>
+  </nav>
+</header>

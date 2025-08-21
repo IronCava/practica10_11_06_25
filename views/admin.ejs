@@ -1,17 +1,23 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Administrador</title>
-  <!-- Enlace al CSS brutalista -->
-  <link rel="stylesheet" href="/resources/css/style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Bienvenido administrador, <%= nombre %>!</h1>
-    <p>Aquí puedes ver información exclusiva para administradores.</p>
-    <a href="/logout" class="btn">Cerrar sesión</a>
-  </div>
-</body>
-</html>
+<%- include('partials/_head') %>
+
+<%
+  // Fallback seguro: si no llega "name", intenta "nombre" y si no, "Usuario"
+  const _name = (typeof name !== 'undefined' && name)
+    ? name
+    : (typeof nombre !== 'undefined' && nombre)
+      ? nombre
+      : 'Usuario';
+%>
+
+<section class="admin">
+  <h1>Panel de administración</h1>
+  <p>Bienvenida, <strong><%= _name %></strong></p>
+
+  <!-- Enlace directo a productos -->
+  <p><a class="btn" href="/productos">Ver productos</a></p>
+
+  <!-- Logout -->
+  <p><a href="/logout" class="btn">Cerrar sesión</a></p>
+</section>
+
+<%- include('partials/_foot') %>

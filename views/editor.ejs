@@ -1,16 +1,24 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Editor</title>
-  <!-- Enlace al CSS brutalista -->
-  <link rel="stylesheet" href="/resources/css/style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Bienvenido editor, <%= nombre %>!</h1>
-    <a href="/logout" class="btn">Cerrar sesión</a>
+<%- include('partials/_head') %>
+
+<%
+  // Fallback por si no llega "name"
+  const _name = (typeof name !== 'undefined' && name) ? name : 'Usuario';
+%>
+
+<section class="editor">
+  <h1>Panel de editor</h1>
+  <p>Bienvenid@, <strong><%= _name %></strong></p>
+
+  <!-- Enlace a productos (modo lectura para editores) -->
+  <p><a class="btn" href="/productos">Ver productos</a></p>
+
+  <!-- Logout -->
+  <p><a href="/logout" class="btn">Cerrar sesión</a></p>
+
+  <!-- Aquí más adelante inyectaremos la tabla en modo lectura -->
+  <div class="editor-content">
+    <!-- Contenido específico del editor -->
   </div>
-</body>
-</html>
+</section>
+
+<%- include('partials/_foot') %>
